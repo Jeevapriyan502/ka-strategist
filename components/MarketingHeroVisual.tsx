@@ -27,24 +27,43 @@ import { useCallback, useEffect, useState } from "react";
 
 const ease4 = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
-/** True center on all phones; slight left shift on large desktop only. */
-const HUB_CENTER =
-  "absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 xl:left-[calc(50%-4rem)]";
+/** Flex-centered hub — works on every screen size (no left/% drift). */
+function HubLayer({
+  children,
+  className = "",
+  z = "z-20",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  z?: string;
+}) {
+  return (
+    <div
+      className={`pointer-events-none absolute inset-0 flex items-center justify-center ${z} ${className}`}
+    >
+      <div className="pointer-events-auto flex flex-col items-center">{children}</div>
+    </div>
+  );
+}
 
 function getChannelPosition(ch: (typeof channels)[number], isMobile: boolean) {
   if (!isMobile) return { x: ch.x, y: ch.y };
+  // Tight symmetric ring — visual centroid stays on the stage center
   const mobile: Record<string, { x: number; y: number }> = {
-    seo: { x: 26, y: 16 },
-    meta: { x: 74, y: 16 },
-    google: { x: 80, y: 50 },
-    social: { x: 20, y: 50 },
-    whatsapp: { x: 50, y: 84 },
+    seo: { x: 50, y: 16 },
+    meta: { x: 20, y: 36 },
+    google: { x: 80, y: 36 },
+    social: { x: 20, y: 64 },
+    whatsapp: { x: 80, y: 64 },
   };
   return mobile[ch.id] ?? { x: ch.x, y: ch.y };
 }
 
 function useIsMobile(breakpoint = 768) {
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.matchMedia(`(max-width: ${breakpoint - 1}px)`).matches;
+  });
 
   useEffect(() => {
     const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
@@ -277,13 +296,13 @@ export default function MarketingHeroVisual() {
   const phoneTop = "50%";
 
   return (
-    <div className="relative mx-auto w-full max-w-[min(100%,320px)] px-1 sm:max-w-[360px] xl:max-w-[420px] xl:-translate-x-12">
-      <p className="mb-3 text-center text-[11px] font-medium text-site-muted xl:text-left">
+    <div className="relative mx-auto w-full max-w-[300px] sm:max-w-[320px] lg:max-w-[360px] xl:max-w-[420px]">
+      <p className="mb-3 text-center text-[11px] font-medium text-site-muted">
         {activated ? "All services running on mobile" : "Tap once — all channels connect"}
       </p>
 
       <div
-        className="relative mx-auto aspect-[3/4] w-full max-w-[280px] sm:max-w-[300px] md:max-w-none md:aspect-auto md:h-[380px]"
+        className="relative mx-auto aspect-square w-full max-w-[300px] sm:aspect-auto sm:h-[360px] sm:max-w-[320px] md:h-[380px] md:max-w-none"
         onClick={!activated ? activateAll : undefined}
         onKeyDown={(e) => {
           if (!activated && (e.key === "Enter" || e.key === " ")) activateAll();
@@ -299,42 +318,46 @@ export default function MarketingHeroVisual() {
 
         <AnimatePresence>
           {activated && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.5, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.25, ease: ease4 }}
-              className={HUB_CENTER}
-            >
-              <div className="relative mx-auto w-[148px] rounded-[1.75rem] border-[4px] border-gray-900 bg-gray-900 shadow-card-hover sm:w-[162px] md:w-[180px]">
-                <div className="absolute left-1/2 top-1.5 z-10 h-1 w-12 -translate-x-1/2 rounded-full bg-gray-800" />
-                <div className="m-1 overflow-hidden rounded-[1.5rem] bg-white">
-                  <ServicesPhoneScreen />
-                </div>
-              </div>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
-                className="mt-2 flex items-center justify-center gap-1 text-[10px] font-semibold text-site-muted"
+            <HubLayer className="max-lg:!translate-x-0 lg:translate-x-[-2.5rem]">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.5, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.7, delay: 0.25, ease: ease4 }}
+                className="flex flex-col items-center"
               >
-                <Smartphone size={11} />
-                Branding · Leads · Web · Software
-              </motion.p>
-            </motion.div>
+                <div className="relative w-[148px] rounded-[1.75rem] border-[4px] border-gray-900 bg-gray-900 shadow-card-hover sm:w-[162px] md:w-[180px]">
+                  <div className="absolute left-1/2 top-1.5 z-10 h-1 w-12 -translate-x-1/2 rounded-full bg-gray-800" />
+                  <div className="m-1 overflow-hidden rounded-[1.5rem] bg-white">
+                    <ServicesPhoneScreen />
+                  </div>
+                </div>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="mt-2 flex items-center justify-center gap-1 text-center text-[10px] font-semibold text-site-muted"
+                >
+                  <Smartphone size={11} />
+                  Branding · Leads · Web · Software
+                </motion.p>
+              </motion.div>
+            </HubLayer>
           )}
         </AnimatePresence>
 
         {!activated && (
-          <motion.button
-            type="button"
-            onClick={activateAll}
-            animate={isMobile ? { scale: 1 } : { scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: isMobile ? 0 : Infinity }}
-            className={`${HUB_CENTER} z-10 flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-dashed border-site-accent/50 bg-white/90 shadow-soft backdrop-blur-sm sm:h-16 sm:w-16`}
-          >
-            <span className="gradient-text text-lg font-black">INK</span>
-            <span className="mt-0.5 text-[8px] font-bold text-site-muted">Tap</span>
-          </motion.button>
+          <HubLayer z="z-10">
+            <motion.button
+              type="button"
+              onClick={activateAll}
+              animate={isMobile ? { scale: 1 } : { scale: [1, 1.05, 1] }}
+              transition={{ duration: 2, repeat: isMobile ? 0 : Infinity }}
+              className="flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-dashed border-site-accent/50 bg-white/90 shadow-soft backdrop-blur-sm sm:h-16 sm:w-16"
+            >
+              <span className="gradient-text text-lg font-black">INK</span>
+              <span className="mt-0.5 text-[8px] font-bold text-site-muted">Tap</span>
+            </motion.button>
+          </HubLayer>
         )}
 
         {channels.map((ch, i) => {
@@ -368,7 +391,7 @@ export default function MarketingHeroVisual() {
             >
               <ch.icon size={isMobile ? 15 : 17} strokeWidth={2.2} />
             </div>
-            <span className="rounded-full bg-white/95 px-1.5 py-0.5 text-[8px] font-semibold text-site-text shadow-soft sm:text-[9px]">
+            <span className="hidden rounded-full bg-white/95 px-1.5 py-0.5 text-[8px] font-semibold text-site-text shadow-soft sm:inline sm:text-[9px]">
               {ch.label}
             </span>
           </motion.button>
@@ -386,7 +409,7 @@ function PhoneProximityEffects({
   activated: boolean;
   isMobile: boolean;
 }) {
-  const phoneAnchor = HUB_CENTER.replace("z-20", "z-[18]");
+  const phoneAnchor = "absolute inset-0 flex items-center justify-center";
 
   const reactions = [
     { icon: Heart, color: "#E53935", x: -52, delay: 0 },
@@ -402,8 +425,10 @@ function PhoneProximityEffects({
           opacity: activated ? [0.3, 0.08, 0.3] : [0.15, 0.05, 0.15],
         }}
         transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}
-        className={`${phoneAnchor} h-[160px] w-[160px] rounded-full border-2 border-site-accent/30 sm:h-[200px] sm:w-[200px]`}
-      />
+        className={`${phoneAnchor} pointer-events-none`}
+      >
+        <div className="h-[160px] w-[160px] rounded-full border-2 border-site-accent/30 sm:h-[200px] sm:w-[200px]" />
+      </motion.div>
 
       {!isMobile &&
         activated &&
@@ -525,7 +550,11 @@ function PhoneProximityEffects({
             opacity: { duration: 0.4, delay: 0.85 },
             y: isMobile ? undefined : { duration: 2.8, repeat: Infinity, ease: "easeInOut" },
           }}
-          className={`${phoneAnchor} mt-[88px] flex items-center gap-1.5 rounded-full bg-[#25D366]/12 px-2.5 py-1 sm:mt-[96px]`}
+          className={
+            isMobile
+              ? "absolute bottom-[6%] left-1/2 z-[19] flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-[#25D366]/12 px-2.5 py-1"
+              : `${phoneAnchor} mt-[88px] flex items-center gap-1.5 rounded-full bg-[#25D366]/12 px-2.5 py-1 sm:mt-[96px]`
+          }
         >
           <MessageCircle size={10} className="text-[#25D366]" />
           <span className="text-[8px] font-bold text-[#128C7E]">New inquiry!</span>
@@ -546,7 +575,7 @@ function MarketingFloaters({
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[15]">
-      {/* New lead alert */}
+      {!isMobile && (
       <motion.div
         initial={{ opacity: 0, x: 20, y: -10 }}
         animate={{
@@ -571,10 +600,10 @@ function MarketingFloaters({
           </div>
         </div>
       </motion.div>
+      )}
 
       {!isMobile && (
         <>
-      {/* ROAS metric */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{

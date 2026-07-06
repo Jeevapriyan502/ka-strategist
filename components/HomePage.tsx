@@ -138,7 +138,7 @@ export default function HomePage() {
                     One team. One contact. Clear monthly reporting.
                   </p>
                 </div>
-                <div className="text-reveal text-reveal-d2 order-1 flex w-full justify-center lg:order-2 lg:justify-end">
+                <div className="text-reveal text-reveal-d2 order-1 mx-auto w-full max-w-[300px] lg:order-2 lg:ml-auto lg:mr-0 lg:max-w-none">
                   <MarketingHeroVisual />
                 </div>
               </div>
