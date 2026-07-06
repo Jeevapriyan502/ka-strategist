@@ -111,8 +111,8 @@ export default function HomePage() {
               </p>
 
               {/* Title + supporting copy left, animation right */}
-              <div className="mt-3 grid items-start gap-10 lg:grid-cols-[1fr_auto] lg:gap-x-16 xl:gap-x-24">
-                <div className="text-reveal text-reveal-d2">
+              <div className="mt-3 grid items-center gap-8 lg:grid-cols-[1fr_auto] lg:items-start lg:gap-x-16 xl:gap-x-24">
+                <div className="text-reveal text-reveal-d2 order-2 lg:order-1">
                   <h1 className="heading-xl text-center lg:text-left">
                     KA <span className="gradient-text">Strategist</span>
                   </h1>
@@ -138,7 +138,7 @@ export default function HomePage() {
                     One team. One contact. Clear monthly reporting.
                   </p>
                 </div>
-                <div className="text-reveal text-reveal-d2 w-full max-w-full justify-self-center overflow-hidden lg:justify-self-end">
+                <div className="text-reveal text-reveal-d2 order-1 flex w-full justify-center lg:order-2 lg:justify-end">
                   <MarketingHeroVisual />
                 </div>
               </div>

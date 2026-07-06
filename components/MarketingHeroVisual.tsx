@@ -27,9 +27,21 @@ import { useCallback, useEffect, useState } from "react";
 
 const ease4 = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
-/** Centered on mobile; shifted left on large screens (no cm units — they break on phones). */
-const PHONE_ANCHOR =
-  "absolute left-1/2 top-[46%] z-20 -translate-x-1/2 -translate-y-1/2 lg:-translate-x-[calc(50%+7rem)]";
+/** True center on all phones; slight left shift on large desktop only. */
+const HUB_CENTER =
+  "absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 xl:left-[calc(50%-4rem)]";
+
+function getChannelPosition(ch: (typeof channels)[number], isMobile: boolean) {
+  if (!isMobile) return { x: ch.x, y: ch.y };
+  const mobile: Record<string, { x: number; y: number }> = {
+    seo: { x: 26, y: 16 },
+    meta: { x: 74, y: 16 },
+    google: { x: 80, y: 50 },
+    social: { x: 20, y: 50 },
+    whatsapp: { x: 50, y: 84 },
+  };
+  return mobile[ch.id] ?? { x: ch.x, y: ch.y };
+}
 
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(false);
@@ -113,7 +125,7 @@ function RotatingBrandRing({ compact = false }: { compact?: boolean }) {
     <motion.div
       animate={{ rotate: 360 }}
       transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
-      className="pointer-events-none absolute left-1/2 top-[46%] z-0 -translate-x-1/2 -translate-y-1/2 hidden md:block"
+      className="pointer-events-none absolute left-1/2 top-1/2 z-0 hidden -translate-x-1/2 -translate-y-1/2 md:block"
       style={{ width: size, height: size }}
     >
       <div className="absolute inset-2 rounded-full border border-dashed border-site-border/40" />
@@ -262,15 +274,16 @@ export default function MarketingHeroVisual() {
   }, [activated]);
 
   const phoneLeft = "50%";
+  const phoneTop = "50%";
 
   return (
-    <div className="relative mx-auto w-full max-w-[300px] sm:max-w-[360px] lg:max-w-[420px] lg:-translate-x-16 lg:-translate-y-4">
-      <p className="mb-2 text-center text-[11px] font-medium text-site-muted lg:text-left">
+    <div className="relative mx-auto w-full max-w-[min(100%,320px)] px-1 sm:max-w-[360px] xl:max-w-[420px] xl:-translate-x-12">
+      <p className="mb-3 text-center text-[11px] font-medium text-site-muted xl:text-left">
         {activated ? "All services running on mobile" : "Tap once — all channels connect"}
       </p>
 
       <div
-        className="relative mx-auto h-[300px] w-full overflow-hidden sm:h-[340px] md:h-[380px]"
+        className="relative mx-auto aspect-[3/4] w-full max-w-[280px] sm:max-w-[300px] md:max-w-none md:aspect-auto md:h-[380px]"
         onClick={!activated ? activateAll : undefined}
         onKeyDown={(e) => {
           if (!activated && (e.key === "Enter" || e.key === " ")) activateAll();
@@ -290,9 +303,9 @@ export default function MarketingHeroVisual() {
               initial={{ opacity: 0, scale: 0.5, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.25, ease: ease4 }}
-              className={PHONE_ANCHOR}
+              className={HUB_CENTER}
             >
-              <div className="relative w-[152px] rounded-[1.75rem] border-[4px] border-gray-900 bg-gray-900 shadow-card-hover sm:w-[168px] md:w-[180px]">
+              <div className="relative mx-auto w-[148px] rounded-[1.75rem] border-[4px] border-gray-900 bg-gray-900 shadow-card-hover sm:w-[162px] md:w-[180px]">
                 <div className="absolute left-1/2 top-1.5 z-10 h-1 w-12 -translate-x-1/2 rounded-full bg-gray-800" />
                 <div className="m-1 overflow-hidden rounded-[1.5rem] bg-white">
                   <ServicesPhoneScreen />
@@ -317,14 +330,16 @@ export default function MarketingHeroVisual() {
             onClick={activateAll}
             animate={isMobile ? { scale: 1 } : { scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: isMobile ? 0 : Infinity }}
-            className={`${PHONE_ANCHOR} z-10 flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-dashed border-site-accent/50 bg-white/90 shadow-soft backdrop-blur-sm sm:h-16 sm:w-16`}
+            className={`${HUB_CENTER} z-10 flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-dashed border-site-accent/50 bg-white/90 shadow-soft backdrop-blur-sm sm:h-16 sm:w-16`}
           >
             <span className="gradient-text text-lg font-black">INK</span>
             <span className="mt-0.5 text-[8px] font-bold text-site-muted">Tap</span>
           </motion.button>
         )}
 
-        {channels.map((ch, i) => (
+        {channels.map((ch, i) => {
+          const pos = getChannelPosition(ch, isMobile);
+          return (
           <motion.button
             key={ch.id}
             type="button"
@@ -332,9 +347,9 @@ export default function MarketingHeroVisual() {
             initial={{ opacity: 0, scale: 0 }}
             animate={{
               opacity: activated ? 0 : 1,
-              scale: activated ? 0.15 : isMobile ? 0.92 : 1,
-              left: activated ? phoneLeft : `${ch.x}%`,
-              top: activated ? "46%" : `${ch.y}%`,
+              scale: activated ? 0.15 : isMobile ? 0.9 : 1,
+              left: activated ? phoneLeft : `${pos.x}%`,
+              top: activated ? phoneTop : `${pos.y}%`,
             }}
             transition={{
               duration: 0.6,
@@ -357,7 +372,8 @@ export default function MarketingHeroVisual() {
               {ch.label}
             </span>
           </motion.button>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -370,7 +386,7 @@ function PhoneProximityEffects({
   activated: boolean;
   isMobile: boolean;
 }) {
-  const phoneAnchor = PHONE_ANCHOR.replace("z-20", "z-[18]");
+  const phoneAnchor = HUB_CENTER.replace("z-20", "z-[18]");
 
   const reactions = [
     { icon: Heart, color: "#E53935", x: -52, delay: 0 },
@@ -399,7 +415,7 @@ function PhoneProximityEffects({
               opacity: [0, 1, 0],
               scale: [0.4, 1, 0.4],
               left: ["72%", "50%", "50%"],
-              top: ["28%", "46%", "46%"],
+              top: ["28%", "50%", "50%"],
             }}
             transition={{
               duration: 1.4,
@@ -543,7 +559,7 @@ function MarketingFloaters({
           y: isMobile ? undefined : { duration: 3.5, repeat: Infinity, ease: "easeInOut" },
           x: { duration: 0.5 },
         }}
-        className="absolute right-[2%] top-[10%] rounded-xl bg-white/95 px-2 py-1.5 shadow-card backdrop-blur-sm sm:right-[8%] sm:top-[18%] sm:px-2.5 sm:py-2"
+        className="absolute right-[6%] top-[8%] rounded-xl bg-white/95 px-2 py-1.5 shadow-card backdrop-blur-sm sm:right-[8%] sm:top-[14%] sm:px-2.5 sm:py-2"
       >
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-site-sky/15">
