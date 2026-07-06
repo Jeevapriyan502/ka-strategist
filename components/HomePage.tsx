@@ -104,7 +104,7 @@ export default function HomePage() {
       {activeSection === "home" && (
         <section className="relative overflow-hidden bg-gradient-hero">
           <AmbientBackground />
-          <div className="container-max relative z-10 min-h-[min(88vh,800px)] px-4 py-16 sm:px-6 lg:px-8">
+          <div className="container-max relative z-10 min-h-0 px-4 py-12 sm:min-h-[min(88vh,800px)] sm:py-16 sm:px-6 lg:px-8">
             <div className="flex flex-col justify-center">
               <p className="section-label text-reveal text-reveal-d1">
                 Clarity in Marketing. Growth in Business.
@@ -138,12 +138,12 @@ export default function HomePage() {
                     One team. One contact. Clear monthly reporting.
                   </p>
                 </div>
-                <div className="text-reveal text-reveal-d2 justify-self-center lg:justify-self-end">
+                <div className="text-reveal text-reveal-d2 mx-auto w-full max-w-[min(100%,340px)] overflow-hidden sm:max-w-none lg:justify-self-end">
                   <MarketingHeroVisual />
                 </div>
               </div>
 
-              <p className="text-reveal text-reveal-d3 mt-6 max-w-xl text-lg leading-relaxed text-site-muted lg:mt-5">
+              <p className="text-reveal text-reveal-d3 mt-6 hidden max-w-xl text-lg leading-relaxed text-site-muted lg:mt-5 lg:block">
                 Premium digital marketing for Tamil Nadu — branding, SEO, Meta
                 ads, websites, and software built to deliver real leads.
               </p>

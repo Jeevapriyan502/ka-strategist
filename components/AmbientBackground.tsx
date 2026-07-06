@@ -17,21 +17,21 @@ export default function AmbientBackground() {
         }}
       />
       <div
-        className="absolute -left-[15%] -top-[10%] h-[520px] w-[520px] animate-orb-float-1 rounded-full opacity-30 blur-[120px]"
+        className="absolute -left-[15%] -top-[10%] h-[280px] w-[280px] animate-orb-float-1 rounded-full opacity-20 blur-[80px] sm:h-[520px] sm:w-[520px] sm:opacity-30 sm:blur-[120px]"
         style={{
           background:
             "radial-gradient(circle, rgba(229,57,53,0.3) 0%, rgba(198,40,40,0.1) 40%, transparent 70%)",
         }}
       />
       <div
-        className="absolute -right-[10%] top-[20%] h-[450px] w-[450px] animate-orb-float-2 rounded-full opacity-25 blur-[120px]"
+        className="absolute -right-[10%] top-[20%] h-[240px] w-[240px] animate-orb-float-2 rounded-full opacity-15 blur-[80px] sm:h-[450px] sm:w-[450px] sm:opacity-25 sm:blur-[120px]"
         style={{
           background:
             "radial-gradient(circle, rgba(30,136,229,0.25) 0%, rgba(21,101,192,0.08) 40%, transparent 70%)",
         }}
       />
       <div
-        className="absolute -bottom-[5%] left-[30%] h-[400px] w-[400px] animate-orb-float-3 rounded-full opacity-25 blur-[120px]"
+        className="absolute -bottom-[5%] left-[30%] hidden h-[400px] w-[400px] animate-orb-float-3 rounded-full opacity-25 blur-[120px] sm:block"
         style={{
           background:
             "radial-gradient(circle, rgba(245,124,0,0.25) 0%, rgba(230,81,0,0.08) 40%, transparent 70%)",
