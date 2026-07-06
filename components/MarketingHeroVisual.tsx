@@ -27,19 +27,21 @@ import { useCallback, useEffect, useState } from "react";
 
 const ease4 = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
-/** Centered phone anchor — no cm offsets (breaks mobile layout) */
+/** Centered on mobile; shifted left on large screens (no cm units — they break on phones). */
 const PHONE_ANCHOR =
-  "absolute left-1/2 top-[46%] z-10 -translate-x-1/2 -translate-y-1/2";
+  "absolute left-1/2 top-[46%] z-20 -translate-x-1/2 -translate-y-1/2 lg:-translate-x-[calc(50%+7rem)]";
 
-function useIsMobile() {
+function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 639px)");
+    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
     const update = () => setIsMobile(mq.matches);
     update();
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
-  }, []);
+  }, [breakpoint]);
+
   return isMobile;
 }
 
@@ -103,15 +105,15 @@ const phoneServices = [
 ] as const;
 
 function RotatingBrandRing({ compact = false }: { compact?: boolean }) {
-  const size = compact ? 200 : 250;
-  const radius = compact ? 86 : 108;
+  const radius = compact ? 78 : 108;
+  const size = compact ? 190 : 250;
   const center = size / 2;
 
   return (
     <motion.div
       animate={{ rotate: 360 }}
-      transition={{ duration: compact ? 32 : 26, repeat: Infinity, ease: "linear" }}
-      className="pointer-events-none absolute left-1/2 top-[46%] z-0 -translate-x-1/2 -translate-y-1/2"
+      transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
+      className="pointer-events-none absolute left-1/2 top-[46%] z-0 -translate-x-1/2 -translate-y-1/2 hidden md:block"
       style={{ width: size, height: size }}
     >
       <div className="absolute inset-2 rounded-full border border-dashed border-site-border/40" />
@@ -127,25 +129,25 @@ function RotatingBrandRing({ compact = false }: { compact?: boolean }) {
           <motion.div
             key={brand.id}
             animate={{ rotate: -360 }}
-            transition={{ duration: compact ? 32 : 26, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
             className="absolute flex flex-col items-center gap-0.5"
             style={{ left: cx, top: cy, transform: "translate(-50%, -50%)" }}
           >
             {"text" in brand ? (
               <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-[9px] font-black text-white shadow-md ring-2 ring-white sm:h-9 sm:w-9 sm:text-[10px] ${brand.color}`}
+                className={`flex h-9 w-9 items-center justify-center rounded-full text-[10px] font-black text-white shadow-md ring-2 ring-white ${brand.color}`}
               >
                 KA
               </div>
             ) : (
               <div
-                className="flex h-8 w-8 items-center justify-center rounded-full text-white shadow-md ring-2 ring-white sm:h-9 sm:w-9"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-white shadow-md ring-2 ring-white"
                 style={{ background: brand.color }}
               >
-                {Icon && <Icon size={compact ? 14 : 16} strokeWidth={2.2} />}
+                {Icon && <Icon size={16} strokeWidth={2.2} />}
               </div>
             )}
-            <span className="hidden rounded-full bg-white/90 px-1.5 py-0.5 text-[8px] font-semibold text-site-muted shadow-soft sm:block">
+            <span className="rounded-full bg-white/90 px-1.5 py-0.5 text-[8px] font-semibold text-site-muted shadow-soft">
               {brand.label}
             </span>
           </motion.div>
@@ -167,7 +169,7 @@ function ServicesPhoneScreen() {
   }, []);
 
   return (
-    <div className="h-[300px] overflow-hidden bg-[#f0f2f5] sm:h-[320px]">
+    <div className="h-[260px] overflow-hidden bg-[#f0f2f5] sm:h-[300px] md:h-[320px]">
       <div className="flex items-center justify-between bg-white px-3 py-1.5">
         <span className="text-[9px] font-semibold text-site-text">9:41</span>
         <p className="text-[8px] font-bold text-site-muted">KA Services</p>
@@ -259,14 +261,16 @@ export default function MarketingHeroVisual() {
     setActivated(true);
   }, [activated]);
 
+  const phoneLeft = "50%";
+
   return (
-    <div className="relative mx-auto w-full max-w-[min(100%,320px)] sm:max-w-[400px] lg:max-w-[420px]">
+    <div className="relative mx-auto w-full max-w-[300px] sm:max-w-[360px] lg:max-w-[420px] lg:-translate-x-16 lg:-translate-y-4">
       <p className="mb-2 text-center text-[11px] font-medium text-site-muted lg:text-left">
         {activated ? "All services running on mobile" : "Tap once — all channels connect"}
       </p>
 
       <div
-        className="relative mx-auto h-[300px] w-full overflow-hidden sm:h-[360px] lg:h-[380px]"
+        className="relative mx-auto h-[300px] w-full overflow-hidden sm:h-[340px] md:h-[380px]"
         onClick={!activated ? activateAll : undefined}
         onKeyDown={(e) => {
           if (!activated && (e.key === "Enter" || e.key === " ")) activateAll();
@@ -276,9 +280,9 @@ export default function MarketingHeroVisual() {
       >
         <RotatingBrandRing compact={isMobile} />
 
-        <BrandingBackdrop activated={activated} minimal={isMobile} />
-        <MarketingFloaters activated={activated} minimal={isMobile} />
-        {!isMobile && <PhoneProximityEffects activated={activated} />}
+        <BrandingBackdrop activated={activated} isMobile={isMobile} />
+        <MarketingFloaters activated={activated} isMobile={isMobile} />
+        <PhoneProximityEffects activated={activated} isMobile={isMobile} />
 
         <AnimatePresence>
           {activated && (
@@ -286,9 +290,9 @@ export default function MarketingHeroVisual() {
               initial={{ opacity: 0, scale: 0.5, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.25, ease: ease4 }}
-              className={`${PHONE_ANCHOR} z-20`}
+              className={PHONE_ANCHOR}
             >
-              <div className="relative w-[156px] rounded-[2rem] border-[5px] border-gray-900 bg-gray-900 shadow-card-hover sm:w-[180px]">
+              <div className="relative w-[152px] rounded-[1.75rem] border-[4px] border-gray-900 bg-gray-900 shadow-card-hover sm:w-[168px] md:w-[180px]">
                 <div className="absolute left-1/2 top-1.5 z-10 h-1 w-12 -translate-x-1/2 rounded-full bg-gray-800" />
                 <div className="m-1 overflow-hidden rounded-[1.5rem] bg-white">
                   <ServicesPhoneScreen />
@@ -311,11 +315,11 @@ export default function MarketingHeroVisual() {
           <motion.button
             type="button"
             onClick={activateAll}
-            animate={{ scale: [1, 1.04, 1] }}
-            transition={{ duration: 2.5, repeat: Infinity }}
-            className={`${PHONE_ANCHOR} flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-dashed border-site-accent/50 bg-white/90 shadow-soft backdrop-blur-sm sm:h-16 sm:w-16`}
+            animate={isMobile ? { scale: 1 } : { scale: [1, 1.05, 1] }}
+            transition={{ duration: 2, repeat: isMobile ? 0 : Infinity }}
+            className={`${PHONE_ANCHOR} z-10 flex h-14 w-14 flex-col items-center justify-center rounded-full border-2 border-dashed border-site-accent/50 bg-white/90 shadow-soft backdrop-blur-sm sm:h-16 sm:w-16`}
           >
-            <span className="gradient-text text-base font-black sm:text-lg">INK</span>
+            <span className="gradient-text text-lg font-black">INK</span>
             <span className="mt-0.5 text-[8px] font-bold text-site-muted">Tap</span>
           </motion.button>
         )}
@@ -328,8 +332,8 @@ export default function MarketingHeroVisual() {
             initial={{ opacity: 0, scale: 0 }}
             animate={{
               opacity: activated ? 0 : 1,
-              scale: activated ? 0.15 : 1,
-              left: activated ? "50%" : `${ch.x}%`,
+              scale: activated ? 0.15 : isMobile ? 0.92 : 1,
+              left: activated ? phoneLeft : `${ch.x}%`,
               top: activated ? "46%" : `${ch.y}%`,
             }}
             transition={{
@@ -337,16 +341,17 @@ export default function MarketingHeroVisual() {
               delay: activated ? i * 0.07 : 0.3 + i * 0.08,
               ease: ease4,
             }}
+            whileHover={!activated ? { scale: 1.1 } : undefined}
             whileTap={!activated ? { scale: 0.92 } : undefined}
             className={`absolute z-30 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5 ${
               activated ? "pointer-events-none" : "cursor-pointer"
             }`}
           >
             <div
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-md ring-2 ring-white sm:h-10 sm:w-10"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-white shadow-md ring-2 ring-white sm:h-9 sm:w-9 md:h-10 md:w-10"
               style={{ backgroundColor: ch.color }}
             >
-              <ch.icon size={16} strokeWidth={2.2} />
+              <ch.icon size={isMobile ? 15 : 17} strokeWidth={2.2} />
             </div>
             <span className="rounded-full bg-white/95 px-1.5 py-0.5 text-[8px] font-semibold text-site-text shadow-soft sm:text-[9px]">
               {ch.label}
@@ -358,8 +363,14 @@ export default function MarketingHeroVisual() {
   );
 }
 
-function PhoneProximityEffects({ activated }: { activated: boolean }) {
-  const phoneAnchor = PHONE_ANCHOR.replace("z-10", "z-[18]");
+function PhoneProximityEffects({
+  activated,
+  isMobile,
+}: {
+  activated: boolean;
+  isMobile: boolean;
+}) {
+  const phoneAnchor = PHONE_ANCHOR.replace("z-20", "z-[18]");
 
   const reactions = [
     { icon: Heart, color: "#E53935", x: -52, delay: 0 },
@@ -369,18 +380,17 @@ function PhoneProximityEffects({ activated }: { activated: boolean }) {
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[18]">
-      {/* Pulse ring around phone */}
       <motion.div
         animate={{
-          scale: activated ? [1, 1.35, 1] : [1, 1.15, 1],
-          opacity: activated ? [0.35, 0.08, 0.35] : [0.2, 0.05, 0.2],
+          scale: activated ? [1, 1.2, 1] : [1, 1.1, 1],
+          opacity: activated ? [0.3, 0.08, 0.3] : [0.15, 0.05, 0.15],
         }}
         transition={{ duration: 2.4, repeat: Infinity, ease: "easeOut" }}
-        className={`${phoneAnchor} h-[200px] w-[200px] rounded-full border-2 border-site-accent/30`}
+        className={`${phoneAnchor} h-[160px] w-[160px] rounded-full border-2 border-site-accent/30 sm:h-[200px] sm:w-[200px]`}
       />
 
-      {/* Data stream dots flowing into phone */}
-      {activated &&
+      {!isMobile &&
+        activated &&
         [0, 1, 2].map((i) => (
           <motion.span
             key={i}
@@ -397,109 +407,109 @@ function PhoneProximityEffects({ activated }: { activated: boolean }) {
               delay: i * 0.45,
               ease: ease4,
             }}
-            className="absolute z-[19] h-2 w-2 rounded-full bg-site-sky shadow-glow-sky"
+            className="absolute z-[19] h-2 w-2 -translate-x-1/2 rounded-full bg-site-sky shadow-glow-sky"
           />
         ))}
 
-      {/* Rising reaction bubbles near phone */}
-      {reactions.map(({ icon: Icon, color, x, delay }) => (
-        <motion.div
-          key={x}
-          animate={{
-            y: activated ? [-8, -52, -8] : [-4, -28, -4],
-            opacity: activated ? [0.4, 1, 0.4] : [0.25, 0.7, 0.25],
-            x: [0, x > 0 ? 6 : -6, 0],
-          }}
-          transition={{ duration: 3.2, repeat: Infinity, delay, ease: "easeInOut" }}
-          className={`${phoneAnchor} flex h-6 w-6 items-center justify-center rounded-full bg-white/95 shadow-soft`}
-          style={{ marginLeft: x }}
-        >
-          <Icon size={11} style={{ color }} fill={Icon === Heart ? color : undefined} />
-        </motion.div>
-      ))}
-
-      {/* Conversion counter */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: activated ? 1 : 0.7, scale: 1, y: activated ? [0, -4, 0] : 0 }}
-        transition={{
-          opacity: { duration: 0.4, delay: activated ? 0.5 : 0 },
-          y: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-        }}
-        className={`${phoneAnchor} -mt-[118px] ml-[72px] rounded-xl bg-white/95 px-2 py-1.5 shadow-card backdrop-blur-sm sm:ml-[80px]`}
-      >
-        <div className="flex items-center gap-1.5">
-          <MousePointerClick size={11} className="text-site-accent" />
-          <div>
-            <motion.p
-              key={activated ? "on" : "off"}
-              animate={{ opacity: [0.7, 1, 0.7] }}
-              transition={{ duration: 1.8, repeat: Infinity }}
-              className="text-[9px] font-extrabold text-site-text"
-            >
-              {activated ? "127 clicks" : "Live tracking"}
-            </motion.p>
-            <p className="text-[7px] text-site-subtle">This week</p>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Notification bell */}
-      <motion.div
-        animate={{ rotate: activated ? [0, -12, 12, -8, 0] : [0, -6, 6, 0] }}
-        transition={{ duration: activated ? 2.5 : 4, repeat: Infinity, repeatDelay: 1.5 }}
-        className={`${phoneAnchor} -mt-[100px] -ml-[78px] flex h-8 w-8 items-center justify-center rounded-full bg-white/95 shadow-soft sm:-ml-[88px]`}
-      >
-        <Bell size={13} className="text-site-sky" />
-        <motion.span
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 1.2, repeat: Infinity }}
-          className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-site-accent text-[7px] font-bold text-white"
-        >
-          3
-        </motion.span>
-      </motion.div>
-
-      {/* Mini funnel card */}
-      <motion.div
-        initial={{ opacity: 0, x: 12 }}
-        animate={{ opacity: activated ? 1 : 0.65, x: 0, y: activated ? [0, 5, 0] : 0 }}
-        transition={{
-          opacity: { duration: 0.45, delay: activated ? 0.7 : 0.2 },
-          y: { duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 },
-        }}
-        className={`${phoneAnchor} mt-[108px] ml-[64px] w-[76px] rounded-xl bg-white/95 p-2 shadow-soft backdrop-blur-sm sm:ml-[72px]`}
-      >
-        <p className="mb-1 text-[7px] font-semibold text-site-muted">Funnel</p>
-        {[
-          { label: "Views", w: "100%", c: "#1E88E5" },
-          { label: "Clicks", w: "68%", c: "#F57C00" },
-          { label: "Leads", w: "34%", c: "#E53935" },
-        ].map((step, i) => (
-          <div key={step.label} className="mb-0.5">
-            <div className="h-1 overflow-hidden rounded-full bg-site-border/40">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: step.w }}
-                transition={{ duration: 0.6, delay: 0.3 + i * 0.12, ease: ease4 }}
-                className="h-full rounded-full"
-                style={{ backgroundColor: step.c }}
-              />
-            </div>
-          </div>
+      {!isMobile &&
+        reactions.map(({ icon: Icon, color, x, delay }) => (
+          <motion.div
+            key={x}
+            animate={{
+              y: activated ? [-8, -52, -8] : [-4, -28, -4],
+              opacity: activated ? [0.4, 1, 0.4] : [0.25, 0.7, 0.25],
+              x: [0, x > 0 ? 6 : -6, 0],
+            }}
+            transition={{ duration: 3.2, repeat: Infinity, delay, ease: "easeInOut" }}
+            className={`${phoneAnchor} flex h-6 w-6 items-center justify-center rounded-full bg-white/95 shadow-soft`}
+            style={{ marginLeft: x }}
+          >
+            <Icon size={11} style={{ color }} fill={Icon === Heart ? color : undefined} />
+          </motion.div>
         ))}
-      </motion.div>
 
-      {/* WhatsApp inquiry toast */}
+      {!isMobile && (
+        <>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: activated ? 1 : 0.7, scale: 1, y: activated ? [0, -4, 0] : 0 }}
+            transition={{
+              opacity: { duration: 0.4, delay: activated ? 0.5 : 0 },
+              y: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+            }}
+            className={`${phoneAnchor} -mt-[118px] ml-[72px] rounded-xl bg-white/95 px-2 py-1.5 shadow-card backdrop-blur-sm sm:ml-[80px]`}
+          >
+            <div className="flex items-center gap-1.5">
+              <MousePointerClick size={11} className="text-site-accent" />
+              <div>
+                <motion.p
+                  key={activated ? "on" : "off"}
+                  animate={{ opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 1.8, repeat: Infinity }}
+                  className="text-[9px] font-extrabold text-site-text"
+                >
+                  {activated ? "127 clicks" : "Live tracking"}
+                </motion.p>
+                <p className="text-[7px] text-site-subtle">This week</p>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            animate={{ rotate: activated ? [0, -12, 12, -8, 0] : [0, -6, 6, 0] }}
+            transition={{ duration: activated ? 2.5 : 4, repeat: Infinity, repeatDelay: 1.5 }}
+            className={`${phoneAnchor} -mt-[100px] -ml-[78px] flex h-8 w-8 items-center justify-center rounded-full bg-white/95 shadow-soft sm:-ml-[88px]`}
+          >
+            <Bell size={13} className="text-site-sky" />
+            <motion.span
+              animate={{ scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.2, repeat: Infinity }}
+              className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-site-accent text-[7px] font-bold text-white"
+            >
+              3
+            </motion.span>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: activated ? 1 : 0.65, x: 0, y: activated ? [0, 5, 0] : 0 }}
+            transition={{
+              opacity: { duration: 0.45, delay: activated ? 0.7 : 0.2 },
+              y: { duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 },
+            }}
+            className={`${phoneAnchor} mt-[108px] ml-[64px] w-[76px] rounded-xl bg-white/95 p-2 shadow-soft backdrop-blur-sm sm:ml-[72px]`}
+          >
+            <p className="mb-1 text-[7px] font-semibold text-site-muted">Funnel</p>
+            {[
+              { label: "Views", w: "100%", c: "#1E88E5" },
+              { label: "Clicks", w: "68%", c: "#F57C00" },
+              { label: "Leads", w: "34%", c: "#E53935" },
+            ].map((step, i) => (
+              <div key={step.label} className="mb-0.5">
+                <div className="h-1 overflow-hidden rounded-full bg-site-border/40">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: step.w }}
+                    transition={{ duration: 0.6, delay: 0.3 + i * 0.12, ease: ease4 }}
+                    className="h-full rounded-full"
+                    style={{ backgroundColor: step.c }}
+                  />
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        </>
+      )}
+
       {activated && (
         <motion.div
-          initial={{ opacity: 0, y: 10, x: "-50%" }}
-          animate={{ opacity: 1, y: [0, -3, 0], x: "-50%" }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: isMobile ? 0 : [0, -3, 0] }}
           transition={{
             opacity: { duration: 0.4, delay: 0.85 },
-            y: { duration: 2.8, repeat: Infinity, ease: "easeInOut" },
+            y: isMobile ? undefined : { duration: 2.8, repeat: Infinity, ease: "easeInOut" },
           }}
-          className={`${phoneAnchor} mt-[96px] flex items-center gap-1.5 rounded-full bg-[#25D366]/12 px-2.5 py-1`}
+          className={`${phoneAnchor} mt-[88px] flex items-center gap-1.5 rounded-full bg-[#25D366]/12 px-2.5 py-1 sm:mt-[96px]`}
         >
           <MessageCircle size={10} className="text-[#25D366]" />
           <span className="text-[8px] font-bold text-[#128C7E]">New inquiry!</span>
@@ -509,7 +519,13 @@ function PhoneProximityEffects({ activated }: { activated: boolean }) {
   );
 }
 
-function MarketingFloaters({ activated, minimal = false }: { activated: boolean; minimal?: boolean }) {
+function MarketingFloaters({
+  activated,
+  isMobile,
+}: {
+  activated: boolean;
+  isMobile: boolean;
+}) {
   const bars = [35, 52, 44, 68, 58, 80, 72];
 
   return (
@@ -520,14 +536,14 @@ function MarketingFloaters({ activated, minimal = false }: { activated: boolean;
         animate={{
           opacity: activated ? 1 : 0.85,
           x: 0,
-          y: minimal ? 0 : activated ? [0, -6, 0] : [0, -4, 0],
+          y: isMobile ? 0 : activated ? [0, -6, 0] : [0, -4, 0],
         }}
         transition={{
           opacity: { duration: 0.5, delay: activated ? 0.4 : 0 },
-          y: minimal ? undefined : { duration: 3.5, repeat: Infinity, ease: "easeInOut" },
+          y: isMobile ? undefined : { duration: 3.5, repeat: Infinity, ease: "easeInOut" },
           x: { duration: 0.5 },
         }}
-        className="absolute right-[6%] top-[16%] rounded-xl bg-white/95 px-2 py-1.5 shadow-card backdrop-blur-sm sm:right-[8%] sm:px-2.5 sm:py-2"
+        className="absolute right-[2%] top-[10%] rounded-xl bg-white/95 px-2 py-1.5 shadow-card backdrop-blur-sm sm:right-[8%] sm:top-[18%] sm:px-2.5 sm:py-2"
       >
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-site-sky/15">
@@ -540,20 +556,22 @@ function MarketingFloaters({ activated, minimal = false }: { activated: boolean;
         </div>
       </motion.div>
 
-      {/* ROAS metric — hidden on very small screens */}
+      {!isMobile && (
+        <>
+      {/* ROAS metric */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{
           opacity: activated ? 1 : 0.8,
           x: 0,
-          y: minimal ? 0 : activated ? [0, 5, 0] : [0, 3, 0],
+          y: activated ? [0, 5, 0] : [0, 3, 0],
         }}
         transition={{
           opacity: { duration: 0.5, delay: activated ? 0.55 : 0.1 },
-          y: minimal ? undefined : { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 },
+          y: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 },
           x: { duration: 0.5 },
         }}
-        className="absolute left-[4%] top-[36%] hidden rounded-xl bg-white/95 px-2.5 py-1.5 shadow-soft backdrop-blur-sm sm:left-[6%] sm:block"
+        className="absolute left-[2%] top-[38%] rounded-xl bg-white/95 px-2.5 py-1.5 shadow-soft backdrop-blur-sm sm:left-[6%]"
       >
         <div className="flex items-center gap-1.5">
           <TrendingUp size={12} className="text-site-accent" />
@@ -564,12 +582,12 @@ function MarketingFloaters({ activated, minimal = false }: { activated: boolean;
         </div>
       </motion.div>
 
-      {/* Mini performance chart — desktop only */}
+      {/* Mini performance chart */}
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: activated ? 1 : 0.75, y: 0 }}
         transition={{ duration: 0.55, delay: activated ? 0.65 : 0.15 }}
-        className="absolute bottom-[14%] right-[6%] hidden w-[88px] rounded-xl bg-white/95 p-2 shadow-soft backdrop-blur-sm sm:block sm:right-[10%]"
+        className="absolute bottom-[14%] right-[6%] w-[88px] rounded-xl bg-white/95 p-2 shadow-soft backdrop-blur-sm sm:right-[10%]"
       >
         <div className="mb-1 flex items-center justify-between">
           <span className="text-[7px] font-semibold text-site-muted">Weekly</span>
@@ -589,35 +607,33 @@ function MarketingFloaters({ activated, minimal = false }: { activated: boolean;
         </div>
       </motion.div>
 
-      {/* Ad live badge — desktop only */}
+      {/* Ad live badge */}
       <motion.div
-        animate={
-          minimal
-            ? { opacity: 0.85 }
-            : {
-                opacity: [0.7, 1, 0.7],
-                scale: activated ? [1, 1.05, 1] : [1, 1.02, 1],
-              }
-        }
-        transition={{ duration: 2, repeat: minimal ? 0 : Infinity }}
-        className="absolute bottom-[22%] left-[8%] hidden items-center gap-1 rounded-full bg-site-accent/10 px-2 py-1 backdrop-blur-sm sm:left-[12%] sm:flex"
+        animate={{
+          opacity: [0.7, 1, 0.7],
+          scale: activated ? [1, 1.05, 1] : [1, 1.02, 1],
+        }}
+        transition={{ duration: 2, repeat: Infinity }}
+        className="absolute left-[8%] bottom-[22%] flex items-center gap-1 rounded-full bg-site-accent/10 px-2 py-1 backdrop-blur-sm sm:left-[12%]"
       >
         <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
         <span className="text-[8px] font-bold text-site-accent">Ad Live</span>
       </motion.div>
 
-      {/* Engagement burst — desktop only */}
+      {/* Engagement burst */}
       <motion.div
-        animate={minimal ? { opacity: 0.8 } : { y: [0, -18, 0], opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 2.8, repeat: minimal ? 0 : Infinity, ease: "easeInOut" }}
-        className="absolute bottom-[28%] right-[18%] hidden items-center gap-0.5 rounded-full bg-white/90 px-2 py-0.5 shadow-soft sm:flex"
+        animate={{ y: [0, -18, 0], opacity: [0.5, 1, 0.5] }}
+        transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute right-[18%] bottom-[28%] flex items-center gap-0.5 rounded-full bg-white/90 px-2 py-0.5 shadow-soft"
       >
         <Zap size={10} className="text-site-warm" fill="currentColor" />
         <span className="text-[8px] font-bold text-site-warm">+32%</span>
       </motion.div>
+        </>
+      )}
 
       {/* Floating ad tags when activated */}
-      {activated && (
+      {activated && !isMobile && (
         <>
           <motion.span
             initial={{ opacity: 0, scale: 0.8 }}
@@ -641,15 +657,20 @@ function MarketingFloaters({ activated, minimal = false }: { activated: boolean;
   );
 }
 
-function BrandingBackdrop({ activated, minimal = false }: { activated: boolean; minimal?: boolean }) {
+function BrandingBackdrop({
+  activated,
+  isMobile,
+}: {
+  activated: boolean;
+  isMobile: boolean;
+}) {
   return (
     <div className="pointer-events-none absolute inset-0 z-[1]">
-      {/* Soft swatch chips (branding palette) */}
       <motion.div
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="absolute left-1/2 top-[14%] flex -translate-x-1/2 gap-1.5 sm:gap-2"
+        className="absolute left-1/2 top-[12%] flex -translate-x-1/2 gap-1.5 sm:top-[14%] sm:gap-2"
       >
         {[
           { c: "#E53935", w: "w-8 sm:w-10" },
@@ -659,10 +680,10 @@ function BrandingBackdrop({ activated, minimal = false }: { activated: boolean; 
         ].map((s, i) => (
           <motion.div
             key={s.c}
-            animate={{ y: minimal ? 0 : activated ? [0, -4, 0] : [0, -2, 0] }}
+            animate={{ y: isMobile ? 0 : activated ? [0, -4, 0] : [0, -2, 0] }}
             transition={
-              minimal
-                ? { duration: 0 }
+              isMobile
+                ? undefined
                 : { duration: 2.8 + i * 0.35, repeat: Infinity, ease: "easeInOut" }
             }
             className={`h-2 ${s.w} rounded-full shadow-soft sm:h-2.5`}
@@ -671,7 +692,7 @@ function BrandingBackdrop({ activated, minimal = false }: { activated: boolean; 
         ))}
       </motion.div>
 
-      {!minimal && (
+      {!isMobile && (
       <svg
         className="absolute inset-0 h-full w-full"
         viewBox="0 0 100 100"
