@@ -1,0 +1,10 @@
+{
+  "explorer.excludeGitIgnore": false,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/node_modules": true,
+    "**/.next": true,
+    "**/.tools": true
+  }
+}
